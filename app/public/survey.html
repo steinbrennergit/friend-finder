@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <!-- Compiled and minified CSS (Materialize) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+        #question-holder {
+            padding-top: 1rem;
+        }
+
+        #profile-image {
+            margin: 1.5rem 0 2rem 28.5rem;
+        }
+
+        #title {
+            padding-right: 2.5rem;
+        }
+
+        .title-card {
+            margin: 2rem auto;
+        }
+
+        .question-div {
+            margin-top: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .question {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        label {
+            margin-right: 1.5rem;
+        }
+    </style>
+
+    <title>Home</title>
+</head>
+
+<body>
+
+    <div class="container">
+        <a href="/" class="btn-floating btn-large btn-flat waves-effect waves-light teal left">
+            <i class="large material-icons">home</i>
+        </a>
+        <div class="card-panel teal center-align">
+            <span class="white-text">
+                <h1 id="title" class="title-card">Survey</h1>
+            </span>
+            <hr>
+            <h4 class="title-card white-text">Please answer the following 10 questions honestly, in accordance with how much you agree with the statement presented.</h4>
+            <hr>
+            <div class="card-action">
+                <form id="question-holder" action="">
+
+                </form>
+                <a id="submit" class="title-card hoverable waves-effect waves-light btn-large teal lighten-4 black-text">
+                    <i class="material-icons right">arrow_forward</i>
+                    <strong>SUBMIT</strong>
+                </a>
+            </div>
+        </div>
+
+        <!-- Modal Structure -->
+        <div id="finished-modal" class="modal">
+            <div class="modal-content">
+                <h1 class="center-align">Your best match is...</h1>
+                <img src="" alt="" id="profile-image">
+                <h2 class="center-align" id="friend-name"></h2>
+            </div>
+            <div class="modal-footer">
+                <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Linking JQuery and Bootstrap JS components -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+
+    <!-- Compiled and minified JavaScript (Materialize) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
+
+    <script>
+
+        const questions = makeQuestions();
+
+        $(document).ready(function () {
+            $('.modal').modal();
+
+            $("#submit").on("click", function () {
+                let answers = $(".answer");
+                let answerValues = [];
+                let numLoops = questions.length * 5;
+                for (let i = 0; i < numLoops; i++) {
+                    let ind = "" + i;
+                    let ans = $(answers[ind])
+                    if (ans.is(':checked')) {
+                        answerValues.push(parseInt(ans.val()));
+                    }
+                }
+
+                $.post("/api/friends", { answerValues }).then((data) => {
+                    $("#profile-image").attr("src", data.photo);
+                    $("#friend-name").text(data.name + "!");
+                    $("#finished-modal").modal('open');
+                });
+            });
+        });
+
+        function makeQuestions() {
+
+            let questions = [];
+
+            for (let i = 1; i < 11; i++) {
+                let str = 'This is a question to ask you. (q' + i + ')';
+                questions.push(str);
+            }
+
+            questions.forEach((str, index) => {
+
+                let qDiv = $('<div class="question-div">');
+                let h5 = $('<h5 class="white-text question">').text(str);
+
+                for (let i = 1; i < 6; i++) {
+                    let label = $('<label>');
+
+                    let input = null;
+                    if (i === 3) {
+                        input = $('<input class="answer" name="q' + index + '" type="radio" value="' + i + '" checked />');
+                    } else {
+                        input = $('<input class="answer" name="q' + index + '" type="radio" value="' + i + '" />');
+                    }
+
+                    let span = $('<span class="white-text">');
+                    switch (i) {
+                        case 1:
+                            span.text("Strongly Agree");
+                            break;
+                        case 2:
+                            span.text("Agree");
+                            break;
+                        case 3:
+                            span.text("Ambivalent");
+                            break;
+                        case 4:
+                            span.text("Disagree");
+                            break;
+                        case 5:
+                            span.text("Strongly Disagree");
+                            break;
+                        default:
+                            console.log("THE SWITCH BROKE, PLEASE SEND HELP!");
+                    }
+
+                    label.append(input);
+                    label.append(span);
+                    qDiv.append(label);
+                }
+
+                qDiv.prepend(h5);
+                $("#question-holder").append(qDiv);
+            });
+
+            return questions;
+        }
+
+    </script>
+
+</body>
+
+</html>
